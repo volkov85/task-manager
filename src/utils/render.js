@@ -1,22 +1,34 @@
-import dayjs from "dayjs";
+import Abstract from "../components/abstract.js";
 
 export const RenderPosition = {
   AFTERBEGIN: `afterbegin`,
   BEFOREEND: `beforeend`
 };
 
-export const render = (container, element, place) => {
+export const render = (container, child, place) => {
+  if (container instanceof Abstract) {
+    container = container.getElement();
+  }
+
+  if (child instanceof Abstract) {
+    child = child.getElement();
+  }
+
   switch (place) {
     case RenderPosition.AFTERBEGIN:
-      container.prepend(element);
+      container.prepend(child);
       break;
     case RenderPosition.BEFOREEND:
-      container.append(element);
+      container.append(child);
       break;
   }
 };
 
 export const renderTemplate = (container, template, place) => {
+  if (container instanceof Abstract) {
+    container = container.getElement();
+  }
+
   container.insertAdjacentHTML(place, template);
 };
 
@@ -36,25 +48,29 @@ export const createElement = (template) => {
 
 // Функция из интернета по генерации случайного числа из диапазона
 // Источник - https://github.com/you-dont-need/You-Dont-Need-Lodash-Underscore#_random
-export const getRandomInteger = (a = 0, b = 1) => {
-  const lower = Math.ceil(Math.min(a, b));
-  const upper = Math.floor(Math.max(a, b));
+export const replace = (newChild, oldChild) => {
+  if (oldChild instanceof Abstract) {
+    oldChild = oldChild.getElement();
+  }
 
-  return Math.floor(lower + Math.random() * (upper - lower + 1));
+  if (newChild instanceof Abstract) {
+    newChild = newChild.getElement();
+  }
+
+  const parent = oldChild.parentElement;
+
+  if (parent === null || oldChild === null || newChild === null) {
+    throw new Error(`Can't replace unexisting elements`);
+  }
+
+  parent.replaceChild(newChild, oldChild);
 };
 
-export const isTaskExpired = (dueDate) => {
-  return dueDate === null ? false : dayjs().isAfter(dueDate, `D`);
-};
+export const remove = (component) => {
+  if (!(component instanceof Abstract)) {
+    throw new Error(`Can remove only components`);
+  }
 
-export const isTaskRepeating = (repeating) => {
-  return Object.values(repeating).some(Boolean);
-};
-
-export const humanizeTaskDueDate = (dueDate) => {
-  return dayjs(dueDate).format(`D MMMM`);
-};
-
-export const isTaskExpiringToday = (dueDate) => {
-  return dueDate === null ? false : dayjs(dueDate).isSame(dayjs(), `D`);
+  component.getElement().remove();
+  component.removeElement();
 };
